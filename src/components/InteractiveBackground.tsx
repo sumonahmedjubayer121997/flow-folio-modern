@@ -16,7 +16,6 @@ const InteractiveBackground: React.FC = () => {
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
   const animationRef = useRef<number>();
-  const isGeneratingRef = useRef(false);
 
   const colors = [
     'rgba(59, 130, 246, 0.8)',   // blue
@@ -103,23 +102,13 @@ const InteractiveBackground: React.FC = () => {
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    const addParticle = (x: number, y: number) => {
-      if (Math.random() < 0.3) {
-        particlesRef.current.push(createParticle(x, y));
-      }
-    };
-
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
-      addParticle(e.clientX, e.clientY);
-    };
-
-    const handleMouseEnter = () => {
-      isGeneratingRef.current = true;
-    };
-
-    const handleMouseLeave = () => {
-      isGeneratingRef.current = false;
+      
+      // Add particles on mouse movement
+      if (Math.random() < 0.3) {
+        particlesRef.current.push(createParticle(e.clientX, e.clientY));
+      }
     };
 
     const handleClick = (e: MouseEvent) => {
@@ -129,55 +118,17 @@ const InteractiveBackground: React.FC = () => {
       }
     };
 
-    // Touch event handlers
-    const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      if (touch) {
-        // Create burst of particles on touch start
-        for (let i = 0; i < 5; i++) {
-          particlesRef.current.push(createParticle(touch.clientX, touch.clientY));
-        }
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      if (touch) {
-        mouseRef.current = { x: touch.clientX, y: touch.clientY };
-        addParticle(touch.clientX, touch.clientY);
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      e.preventDefault();
-    };
-
     resizeCanvas();
     animate();
 
-    // Mouse events
     window.addEventListener('resize', resizeCanvas);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseenter', handleMouseEnter);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
-    canvas.addEventListener('click', handleClick);
-
-    // Touch events
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('click', handleClick);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseenter', handleMouseEnter);
-      canvas.removeEventListener('mouseleave', handleMouseLeave);
-      canvas.removeEventListener('click', handleClick);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('click', handleClick);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
@@ -187,11 +138,8 @@ const InteractiveBackground: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full z-0"
-      style={{ 
-        background: 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%)',
-        touchAction: 'none'
-      }}
+      className="fixed inset-0 w-full h-full pointer-events-none z-0"
+      style={{ background: 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%)' }}
     />
   );
 };
